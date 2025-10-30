@@ -1,0 +1,1 @@
+print('Teste: O terminal está funcionando!')

@@ -1,0 +1,56 @@
+{
+  "name": "MinhaEquipe",
+  "players": [
+    {
+      "name": "LuckyTiger40",
+      "role": "Top",
+      "skill": 61,
+      "preferred_champs": [
+        "Ekko",
+        "Maokai",
+        "Senna"
+      ]
+    },
+    {
+      "name": "VoidFlash79",
+      "role": "Support",
+      "skill": 75,
+      "preferred_champs": [
+        "Orianna",
+        "Lux",
+        "Thresh"
+      ]
+    },
+    {
+      "name": "StarRift15",
+      "role": "Jungle",
+      "skill": 60,
+      "preferred_champs": [
+        "Caitlyn",
+        "Darius",
+        "Ahri"
+      ]
+    },
+    {
+      "name": "AlphaBlade77",
+      "role": "ADC",
+      "skill": 60,
+      "preferred_champs": [
+        "Hecarim",
+        "Zed",
+        "Riven"
+      ]
+    },
+    {
+      "name": "NeoRift89",
+      "role": "Mid",
+      "skill": 75,
+      "preferred_champs": [
+        "Aatrox",
+        "Leona",
+        "Sona"
+      ]
+    }
+  ],
+  "money": 53800
+}
