@@ -1,4 +1,3 @@
-
 import json
 import random
 import os
@@ -10,6 +9,148 @@ from typing import List, Dict
 # Jogo de gerenciamento de equipe de esports de League of Legends (CLI)
 # Crie, gerencie jogadores, contrate/demit, escolha draft, estratégias e jogue campeonatos.
 # Salva/Carrega time em 'team.json' no mesmo diretório.
+
+LEAGUES = {
+    "LPL": {
+        "region": "China",
+        "teams": 16,
+        "groups": 4,
+        "group_size": 4,
+        "format": "Bo5",
+        "draft_mode": "Fearless",
+        "playoff_teams": 8
+    },
+    "LCK": {
+        "region": "Coréia do Sul",
+        "teams": 10,
+        "groups": 2,
+        "group_size": 5,
+        "format": "Bo3",
+        "triple_round": True,
+        "playoff_teams": 4,
+        "relegation": True
+    },
+    "LEC": {
+        "region": "Europa",
+        "teams": 10,
+        "groups": 2,
+        "group_size": 5,
+        "format": "Bo3",
+        "playoff_teams": 8
+    },
+    "LCS": {
+        "region": "América do Norte",
+        "teams": 10,
+        "double_round": True,
+        "format": "Bo1",
+        "playoff_teams": 8
+    },
+    "CBLOL": {
+        "region": "Brasil",
+        "teams": 10,
+        "double_round": True,
+        "format": "Bo1",
+        "playoff_teams": 6
+    },
+    "LJL": {
+        "region": "Japão",
+        "teams": 8,
+        "double_round": True,
+        "format": "Bo3",
+        "playoff_teams": 6
+    },
+    "TCL": {
+        "region": "Turquia",
+        "teams": 6,
+        "format": "Bo5",
+        "draft_mode": "Fearless",
+        "playoff_teams": 6
+    },
+    "LLA": {
+        "region": "LLA",
+        "teams": 7,
+        "double_round": True,
+        "weeks": 7,
+        "format": "Bo3",
+        "playoff_teams": 6
+    }
+}
+
+def play_league(league_name, split=1):
+    league = LEAGUES[league_name]
+    print(f"\n--- {league_name} Split {split} ---")
+    # Seleciona times da região
+    region = league["region"]
+    teams = TEAMS_BY_REGION[region]["fortes"] + TEAMS_BY_REGION[region]["fracos"]
+    # Sorteia grupos se necessário
+    if "groups" in league:
+        random.shuffle(teams)
+        groups = [teams[i*league["group_size"]:(i+1)*league["group_size"]] for i in range(league["groups"])]
+        for idx, group in enumerate(groups, 1):
+            print(f"Grupo {idx}: {', '.join(group)}")
+        # Simula rodadas e classificação
+        # ...simulação de partidas e classificação...
+    else:
+        print(f"Times: {', '.join(teams)}")
+        # Simula rodadas duplas/triplas
+        # ...simulação de partidas e classificação...
+    print("\nPlayoffs: ...")
+    # ...simulação dos playoffs...
+    return teams[:league["playoff_teams"]]  # Retorna classificados
+
+def play_split_all_leagues(split=1):
+    print(f"\n=== Split {split} ===")
+    qualified = {}
+    for league_name in LEAGUES:
+        qualified[league_name] = play_league(league_name, split)
+    return qualified
+
+def play_msi(qualified):
+    print("\n=== Mid-Season Invitational (MSI) ===")
+    # Seleciona times conforme regras
+    msi_teams = []
+    msi_teams += qualified["LCK"][:2]
+    msi_teams += qualified["LPL"][:2]
+    msi_teams += [qualified["LEC"][0], qualified["LCS"][0], qualified["CBLOL"][0], qualified["TCL"][0], qualified["LJL"][0], qualified["LLA"][0]]
+    print(f"Times MSI: {', '.join(msi_teams)}")
+    # Fase 1: 4 times, sorteio
+    phase1 = random.sample(msi_teams, 4)
+    print(f"Fase 1: {', '.join(phase1)}")
+    # ...simulação de chave dupla eliminação...
+    # Fase 2: 8 times
+    phase2 = [t for t in msi_teams if t not in phase1[:2]] + phase1[:2]
+    print(f"Fase 2: {', '.join(phase2)}")
+    # ...simulação de chave dupla eliminação...
+    # Vencedor e segunda melhor região
+    print("\nMSI concluído!")
+    return phase2[0]  # Vencedor
+
+def play_worlds(qualified, msi_winner=None):
+    print("\n=== Worlds ===")
+    # Seleciona times conforme regras
+    worlds_teams = []
+    worlds_teams += qualified["LCK"][:4]
+    worlds_teams += qualified["LPL"][:4]
+    worlds_teams += qualified["LEC"][:3]
+    worlds_teams += qualified["LCS"][:2]
+    worlds_teams += [qualified["CBLOL"][0], qualified["TCL"][0], qualified["LJL"][0], qualified["LLA"][0]]
+    if msi_winner:
+        worlds_teams.append(msi_winner)
+    print(f"Times Worlds: {', '.join(worlds_teams)}")
+    # Fase 1: pior LPL vs pior LCK
+    phase1 = [qualified["LPL"][3], qualified["LCK"][3]]
+    print(f"Fase 1: {', '.join(phase1)}")
+    # ...simulação Bo5...
+    # Fase 2: suíço
+    phase2 = worlds_teams
+    print(f"Fase 2 (Suíço): {', '.join(phase2)}")
+    # ...simulação suíço...
+    # Fase 3: eliminação simples
+    print("\nWorlds concluído!")
+    return phase2[0]  # Vencedor
+
+def sorteio_confrontos(times, n_confrontos):
+    return random.sample(times, n_confrontos)
 
 
 SAVE_FILE = "team.json"
@@ -129,71 +270,71 @@ TEAMS_BY_REGION = {
         "times": {
             "BNK FearX": {
                 "jogadores": {
-                    "Top": {"nome": "Clear", "skill": 75},
-                    "Jungle": {"nome": "Raptor", "skill": 75},
-                    "Mid": {"nome": "VicLa", "skill": 78},
-                    "ADC": {"nome": "Dlable", "skill": 76},
-                    "Support": {"nome": "Kellin", "skill": 77}
+                    "Top": {"nome": "Clear", "skill": 78},
+                    "Jungle": {"nome": "Raptor", "skill": 77},
+                    "Mid": {"nome": "VicLa", "skill": 80},
+                    "ADC": {"nome": "Dlable", "skill": 79},
+                    "Support": {"nome": "Kellin", "skill": 78}
                 }
             },
             "DN Freecs": {
                 "jogadores": {
-                    "Top": {"nome": "DuDu", "skill": 77},
-                    "Jungle": {"nome": "Pyosik", "skill": 85, "world_champion": True, "best_player": True},
+                    "Top": {"nome": "DuDu", "skill": 80},
+                    "Jungle": {"nome": "Pyosik", "skill": 92, "world_champion": True, "best_player": True},
                     "Mid": {
-                        "titular": {"nome": "BuLLDog", "skill": 78},
-                        "reserva": {"nome": "Pungyeon", "skill": 75}
+                        "titular": {"nome": "BuLLDog", "skill": 82},
+                        "reserva": {"nome": "Pungyeon", "skill": 77}
                     },
-                    "ADC": {"nome": "Berserker", "skill": 80},
-                    "Support": {"nome": "Life", "skill": 78}
+                    "ADC": {"nome": "Berserker", "skill": 83},
+                    "Support": {"nome": "Life", "skill": 81}
                 }
             },
             "Dplus KIA": {
                 "jogadores": {
-                    "Top": {"nome": "Siwoo", "skill": 77},
-                    "Jungle": {"nome": "Lucid", "skill": 78},
-                    "Mid": {"nome": "Showmaker", "skill": 88, "world_champion": True, "best_player": True},
-                    "ADC": {"nome": "Aiming", "skill": 82},
-                    "Support": {"nome": "BeryL", "skill": 83, "world_champion": True}
+                    "Top": {"nome": "Siwoo", "skill": 79},
+                    "Jungle": {"nome": "Lucid", "skill": 80},
+                    "Mid": {"nome": "Showmaker", "skill": 94, "world_champion": True, "best_player": True},
+                    "ADC": {"nome": "Aiming", "skill": 85},
+                    "Support": {"nome": "BeryL", "skill": 90, "world_champion": True}
                 }
             },
             "DRX": {
                 "jogadores": {
-                    "Top": {"nome": "Rich", "skill": 76},
-                    "Jungle": {"nome": "Sponge", "skill": 77},
-                    "Mid": {"nome": "Ucal", "skill": 78},
+                    "Top": {"nome": "Rich", "skill": 78},
+                    "Jungle": {"nome": "Sponge", "skill": 79},
+                    "Mid": {"nome": "Ucal", "skill": 81},
                     "ADC": {
-                        "titular": {"nome": "LazyFeel", "skill": 79, "nacionalidade": "Vietnã"},
-                        "reserva": {"nome": "Teddy", "skill": 77}
+                        "titular": {"nome": "LazyFeel", "skill": 72, "nacionalidade": "Vietnã"},
+                        "reserva": {"nome": "Teddy", "skill": 80}
                     },
-                    "Support": {"nome": "Andil", "skill": 76}
+                    "Support": {"nome": "Andil", "skill": 78}
                 }
             },
             "Gen.G": {
                 "jogadores": {
-                    "Top": {"nome": "Klin", "skill": 80},
-                    "Jungle": {"nome": "Canyon", "skill": 87, "world_champion": True},
-                    "Mid": {"nome": "Chovy", "skill": 90, "best_player": True},
-                    "ADC": {"nome": "Ruler", "skill": 85},
-                    "Support": {"nome": "Duro", "skill": 82}
+                    "Top": {"nome": "Klin", "skill": 88},
+                    "Jungle": {"nome": "Canyon", "skill": 95, "world_champion": True},
+                    "Mid": {"nome": "Chovy", "skill": 96, "best_player": True},
+                    "ADC": {"nome": "Ruler", "skill": 92},
+                    "Support": {"nome": "Duro", "skill": 89}
                 }
             },
             "Hanwha Life": {
                 "jogadores": {
-                    "Top": {"nome": "Zeus", "skill": 89, "world_champion": True, "best_player": True},
-                    "Jungle": {"nome": "Peanut", "skill": 84},
-                    "Mid": {"nome": "Zeka", "skill": 85, "world_champion": True},
-                    "ADC": {"nome": "Viper", "skill": 86},
-                    "Support": {"nome": "Delight", "skill": 82}
+                    "Top": {"nome": "Zeus", "skill": 97, "world_champion": True, "best_player": True},
+                    "Jungle": {"nome": "Peanut", "skill": 91},
+                    "Mid": {"nome": "Zeka", "skill": 93, "world_champion": True},
+                    "ADC": {"nome": "Viper", "skill": 94},
+                    "Support": {"nome": "Delight", "skill": 89}
                 }
             },
             "KT Rolster": {
                 "jogadores": {
-                    "Top": {"nome": "PerfecT", "skill": 80},
-                    "Jungle": {"nome": "Cuzz", "skill": 83, "world_champion": True},
-                    "Mid": {"nome": "Bdd", "skill": 87, "best_player": True},
-                    "ADC": {"nome": "deokdam", "skill": 82},
-                    "Support": {"nome": "Way", "skill": 81}
+                    "Top": {"nome": "PerfecT", "skill": 87},
+                    "Jungle": {"nome": "Cuzz", "skill": 90, "world_champion": True},
+                    "Mid": {"nome": "Bdd", "skill": 93, "best_player": True},
+                    "ADC": {"nome": "deokdam", "skill": 89},
+                    "Support": {"nome": "Way", "skill": 88}
                 }
             },
             "Nongshim RedForce": {
@@ -237,62 +378,62 @@ TEAMS_BY_REGION = {
         "times": {
             "Anyone's Legends": {
                 "jogadores": {
-                    "Top": {"nome": "Flandre", "skill": 80},
-                    "Jungle": {"nome": "Tarzan", "skill": 85, "nacionalidade": "Coréia do Sul"},
-                    "Mid": {"nome": "Shanks", "skill": 78},
-                    "ADC": {"nome": "Hope", "skill": 80},
-                    "Support": {"nome": "Kael", "skill": 78, "nacionalidade": "Coréia do Sul"}
+                    "Top": {"nome": "Flandre", "skill": 84},
+                    "Jungle": {"nome": "Tarzan", "skill": 92, "nacionalidade": "Coréia do Sul"},
+                    "Mid": {"nome": "Shanks", "skill": 82},
+                    "ADC": {"nome": "Hope", "skill": 85},
+                    "Support": {"nome": "Kael", "skill": 83, "nacionalidade": "Coréia do Sul"}
                 }
             },
             "Bilibili Gaming": {
                 "jogadores": {
-                    "Top": {"nome": "Bin", "skill": 88, "best_player": True},
-                    "Jungle": {"nome": "Shad0w", "skill": 80},
-                    "Mid": {"nome": "Knight", "skill": 86, "world_champion": True},
-                    "ADC": {"nome": "Elk", "skill": 84},
-                    "Support": {"nome": "ON", "skill": 82}
+                    "Top": {"nome": "Bin", "skill": 91, "best_player": True},
+                    "Jungle": {"nome": "Shad0w", "skill": 85},
+                    "Mid": {"nome": "Knight", "skill": 93, "world_champion": True},
+                    "ADC": {"nome": "Elk", "skill": 88},
+                    "Support": {"nome": "ON", "skill": 86}
                 }
             },
             "EDward Gaming": {
                 "jogadores": {
-                    "Top": {"nome": "Zdz", "skill": 77},
-                    "Jungle": {"nome": "Xiaohao", "skill": 85, "best_player": True},
-                    "Mid": {"nome": "Angel", "skill": 80},
-                    "ADC": {"nome": "Ahn", "skill": 78},
-                    "Support": {"nome": "Parukia", "skill": 77}
+                    "Top": {"nome": "Zdz", "skill": 74},
+                    "Jungle": {"nome": "Xiaohao", "skill": 88, "best_player": True},
+                    "Mid": {"nome": "Angel", "skill": 76},
+                    "ADC": {"nome": "Ahn", "skill": 75},
+                    "Support": {"nome": "Parukia", "skill": 74}
                 }
             },
             "FunPlus Phoenix": {
                 "jogadores": {
-                    "Top": {"nome": "sheer", "skill": 76},
+                    "Top": {"nome": "sheer", "skill": 73},
                     "Jungle": {
-                        "titular": {"nome": "Iyy", "skill": 78},
-                        "reserva": {"nome": "milkway", "skill": 75},
-                        "reserva2": {"nome": "Jiejie", "skill": 80}
+                        "titular": {"nome": "Iyy", "skill": 75},
+                        "reserva": {"nome": "milkway", "skill": 72},
+                        "reserva2": {"nome": "Jiejie", "skill": 77}
                     },
-                    "Mid": {"nome": "Care", "skill": 80},
-                    "ADC": {"nome": "JiaQi", "skill": 77},
-                    "Support": {"nome": "Jwei", "skill": 76}
+                    "Mid": {"nome": "Care", "skill": 76},
+                    "ADC": {"nome": "JiaQi", "skill": 74},
+                    "Support": {"nome": "Jwei", "skill": 73}
                 }
             },
             "Invictus Gaming": {
                 "jogadores": {
-                    "Top": {"nome": "TheShy", "skill": 87, "world_champion": True},
-                    "Jungle": {"nome": "Wei", "skill": 80},
-                    "Mid": {"nome": "Rookie", "skill": 90, "nacionalidade": "Coréia do Sul", "best_player": True, "world_champion": True},
-                    "ADC": {"nome": "GALA", "skill": 85},
-                    "Support": {"nome": "Meiko", "skill": 88, "world_champion": True}
+                    "Top": {"nome": "TheShy", "skill": 94, "world_champion": True},
+                    "Jungle": {"nome": "Wei", "skill": 87},
+                    "Mid": {"nome": "Rookie", "skill": 93, "nacionalidade": "Coréia do Sul", "best_player": True, "world_champion": True},
+                    "ADC": {"nome": "GALA", "skill": 90},
+                    "Support": {"nome": "Meiko", "skill": 91, "world_champion": True}
                 }
             },
             "JD Gaming": {
                 "jogadores": {
-                    "Top": {"nome": "Xiaoxu", "skill": 78},
-                    "Jungle": {"nome": "Xun", "skill": 80},
-                    "Mid": {"nome": "Scout", "skill": 89, "nacionalidade": "Coréia do Sul", "best_player": True, "world_champion": True},
-                    "ADC": {"nome": "Peyz", "skill": 85, "nacionalidade": "Coréia do Sul"},
+                    "Top": {"nome": "Xiaoxu", "skill": 83},
+                    "Jungle": {"nome": "Xun", "skill": 85},
+                    "Mid": {"nome": "Scout", "skill": 92, "nacionalidade": "Coréia do Sul", "best_player": True, "world_champion": True},
+                    "ADC": {"nome": "Peyz", "skill": 89, "nacionalidade": "Coréia do Sul"},
                     "Support": {
-                        "titular": {"nome": "Wink", "skill": 80},
-                        "reserva": {"nome": "Zhuo", "skill": 77}
+                        "titular": {"nome": "Wink", "skill": 84},
+                        "reserva": {"nome": "Zhuo", "skill": 80}
                     }
                 }
             },
@@ -382,20 +523,20 @@ TEAMS_BY_REGION = {
         "times": {
             "Fnatic": {
                 "jogadores": {
-                    "Top": {"nome": "Oscarinin", "skill": 78, "nacionalidade": "Espanha"},
-                    "Jungle": {"nome": "Razork", "skill": 80, "nacionalidade": "Espanha"},
-                    "Mid": {"nome": "Poby", "skill": 85, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "Upset", "skill": 88, "nacionalidade": "Alemanha"},
-                    "Support": {"nome": "Mikyx", "skill": 85, "nacionalidade": "Eslovênia"}
+                    "Top": {"nome": "Oscarinin", "skill": 80, "nacionalidade": "Espanha"},
+                    "Jungle": {"nome": "Razork", "skill": 82, "nacionalidade": "Espanha"},
+                    "Mid": {"nome": "Poby", "skill": 87, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "Upset", "skill": 86, "nacionalidade": "Alemanha"},
+                    "Support": {"nome": "Mikyx", "skill": 84, "nacionalidade": "Eslovênia"}
                 }
             },
             "G2 Esports": {
                 "jogadores": {
-                    "Top": {"nome": "BrokenBlade", "skill": 85, "nacionalidade": "Alemanha"},
-                    "Jungle": {"nome": "SkewMond", "skill": 82, "nacionalidade": "França"},
-                    "Mid": {"nome": "Caps", "skill": 90, "nacionalidade": "Dinamarca", "best_player": True},
-                    "ADC": {"nome": "Hans Sama", "skill": 87, "nacionalidade": "França"},
-                    "Support": {"nome": "Labrov", "skill": 83, "nacionalidade": "Grécia"}
+                    "Top": {"nome": "BrokenBlade", "skill": 84, "nacionalidade": "Alemanha"},
+                    "Jungle": {"nome": "SkewMond", "skill": 83, "nacionalidade": "França"},
+                    "Mid": {"nome": "Caps", "skill": 88, "nacionalidade": "Dinamarca", "best_player": True},
+                    "ADC": {"nome": "Hans Sama", "skill": 85, "nacionalidade": "França"},
+                    "Support": {"nome": "Labrov", "skill": 82, "nacionalidade": "Grécia"}
                 }
             },
             "GIANTX": {
@@ -478,56 +619,56 @@ TEAMS_BY_REGION = {
         "times": {
             "BBL Dark Passage": {
                 "jogadores": {
-                    "Top": {"nome": "NuQ", "skill": 75, "nacionalidade": "Turquia"},
-                    "Jungle": {"nome": "Kireas", "skill": 76, "nacionalidade": "Turquia"},
-                    "Mid": {"nome": "KSAEZ", "skill": 77, "nacionalidade": "Turquia"},
-                    "ADC": {"nome": "Neramin", "skill": 76, "nacionalidade": "Turquia"},
-                    "Support": {"nome": "Joexy", "skill": 75, "nacionalidade": "Turquia"}
+                    "Top": {"nome": "NuQ", "skill": 62, "nacionalidade": "Turquia"},
+                    "Jungle": {"nome": "Kireas", "skill": 63, "nacionalidade": "Turquia"},
+                    "Mid": {"nome": "KSAEZ", "skill": 64, "nacionalidade": "Turquia"},
+                    "ADC": {"nome": "Neramin", "skill": 63, "nacionalidade": "Turquia"},
+                    "Support": {"nome": "Joexy", "skill": 62, "nacionalidade": "Turquia"}
                 }
             },
             "Besiktas Esports": {
                 "jogadores": {
-                    "Top": {"nome": "Vertigo", "skill": 80, "nacionalidade": "Áustria"},
-                    "Jungle": {"nome": "CHEF", "skill": 78, "nacionalidade": "Turquia"},
-                    "Mid": {"nome": "Ivory", "skill": 83, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "Ruep", "skill": 79, "nacionalidade": "Turquia"},
-                    "Support": {"nome": "Patch", "skill": 81, "nacionalidade": "Coréia do Sul"}
+                    "Top": {"nome": "Vertigo", "skill": 72, "nacionalidade": "Áustria"},
+                    "Jungle": {"nome": "CHEF", "skill": 68, "nacionalidade": "Turquia"},
+                    "Mid": {"nome": "Ivory", "skill": 81, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "Ruep", "skill": 69, "nacionalidade": "Turquia"},
+                    "Support": {"nome": "Patch", "skill": 80, "nacionalidade": "Coréia do Sul"}
                 }
             },
             "Bushido Wildcats": {
                 "jogadores": {
-                    "Top": {"nome": "Zest", "skill": 83, "nacionalidade": "Coréia do Sul"},
-                    "Jungle": {"nome": "Peach", "skill": 82, "nacionalidade": "Coréia do Sul"},
-                    "Mid": {"nome": "Kofte", "skill": 80, "nacionalidade": "Turquia"},
-                    "ADC": {"nome": "Scorth", "skill": 81, "nacionalidade": "Turquia"},
-                    "Support": {"nome": "monkaS", "skill": 79, "nacionalidade": "Turquia"}
+                    "Top": {"nome": "Zest", "skill": 82, "nacionalidade": "Coréia do Sul"},
+                    "Jungle": {"nome": "Peach", "skill": 81, "nacionalidade": "Coréia do Sul"},
+                    "Mid": {"nome": "Kofte", "skill": 70, "nacionalidade": "Turquia"},
+                    "ADC": {"nome": "Scorth", "skill": 69, "nacionalidade": "Turquia"},
+                    "Support": {"nome": "monkaS", "skill": 68, "nacionalidade": "Turquia"}
                 }
             },
             "Misa Esports": {
                 "jogadores": {
-                    "Top": {"nome": "Mihile", "skill": 82, "nacionalidade": "Coréia do Sul"},
-                    "Jungle": {"nome": "Closer", "skill": 83, "nacionalidade": "Turquia"},
-                    "Mid": {"nome": "Callme", "skill": 84, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "ToongE", "skill": 81, "nacionalidade": "Reino Unido"},
-                    "Support": {"nome": "Batuuu", "skill": 80, "nacionalidade": "Turquia"}
+                    "Top": {"nome": "Mihile", "skill": 81, "nacionalidade": "Coréia do Sul"},
+                    "Jungle": {"nome": "Closer", "skill": 73, "nacionalidade": "Turquia"},
+                    "Mid": {"nome": "Callme", "skill": 82, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "ToongE", "skill": 71, "nacionalidade": "Reino Unido"},
+                    "Support": {"nome": "Batuuu", "skill": 69, "nacionalidade": "Turquia"}
                 }
             },
             "Papara Supermassive": {
                 "jogadores": {
-                    "Top": {"nome": "Armut", "skill": 85, "nacionalidade": "Turquia", "best_player": True},
-                    "Jungle": {"nome": "Kaboom", "skill": 78, "nacionalidade": "Turquia"},
-                    "Mid": {"nome": "Mask", "skill": 82, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "BAO", "skill": 81, "nacionalidade": "Coréia do Sul"},
-                    "Support": {"nome": "Carry", "skill": 79, "nacionalidade": "Turquia"}
+                    "Top": {"nome": "Armut", "skill": 75, "nacionalidade": "Turquia", "best_player": True},
+                    "Jungle": {"nome": "Kaboom", "skill": 67, "nacionalidade": "Turquia"},
+                    "Mid": {"nome": "Mask", "skill": 81, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "BAO", "skill": 80, "nacionalidade": "Coréia do Sul"},
+                    "Support": {"nome": "Carry", "skill": 68, "nacionalidade": "Turquia"}
                 }
             },
             "ULF Esports": {
                 "jogadores": {
-                    "Top": {"nome": "Chasy", "skill": 81, "nacionalidade": "Coréia do Sul"},
-                    "Jungle": {"nome": "Typhoon", "skill": 78, "nacionalidade": "Turquia"},
-                    "Mid": {"nome": "Gori", "skill": 82, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "Kaori", "skill": 80, "nacionalidade": "Turquia"},
-                    "Support": {"nome": "Farfetch", "skill": 85, "nacionalidade": "Coréia do Sul", "best_player": True}
+                    "Top": {"nome": "Chasy", "skill": 80, "nacionalidade": "Coréia do Sul"},
+                    "Jungle": {"nome": "Typhoon", "skill": 66, "nacionalidade": "Turquia"},
+                    "Mid": {"nome": "Gori", "skill": 81, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "Kaori", "skill": 70, "nacionalidade": "Turquia"},
+                    "Support": {"nome": "Farfetch", "skill": 83, "nacionalidade": "Coréia do Sul", "best_player": True}
                 }
             }
         }
@@ -538,65 +679,65 @@ TEAMS_BY_REGION = {
         "times": {
             "Vivo Keyd Stars": {
                 "jogadores": {
-                    "Top": {"nome": "Boal", "skill": 82, "nacionalidade": "Brasil"},
-                    "Jungle": {"nome": "Disamis", "skill": 83, "nacionalidade": "Brasil"},
-                    "Mid": {"nome": "Mireu", "skill": 88, "nacionalidade": "Coréia do Sul", "best_player": True},
-                    "ADC": {"nome": "Morttheus", "skill": 84, "nacionalidade": "Brasil"},
-                    "Support": {"nome": "Trymbi", "skill": 85, "nacionalidade": "Polônia"}
+                    "Top": {"nome": "Boal", "skill": 74, "nacionalidade": "Brasil"},
+                    "Jungle": {"nome": "Disamis", "skill": 75, "nacionalidade": "Brasil"},
+                    "Mid": {"nome": "Mireu", "skill": 85, "nacionalidade": "Coréia do Sul", "best_player": True},
+                    "ADC": {"nome": "Morttheus", "skill": 77, "nacionalidade": "Brasil"},
+                    "Support": {"nome": "Trymbi", "skill": 80, "nacionalidade": "Polônia"}
                 }
             },
             "paiN Gaming": {
                 "jogadores": {
                     "Top": {"nome": "Wizer", "skill": 83, "nacionalidade": "Coréia do Sul"},
-                    "Jungle": {"nome": "CarioK", "skill": 85, "nacionalidade": "Brasil"},
-                    "Mid": {"nome": "Roamer", "skill": 84, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "TitaN", "skill": 88, "nacionalidade": "Brasil", "best_player": True},
-                    "Support": {"nome": "Kuri", "skill": 82, "nacionalidade": "Coréia do Sul"}
+                    "Jungle": {"nome": "CarioK", "skill": 79, "nacionalidade": "Brasil", "best_player": True},
+                    "Mid": {"nome": "Roamer", "skill": 82, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "TitaN", "skill": 80, "nacionalidade": "Brasil", "best_player": True},
+                    "Support": {"nome": "Kuri", "skill": 81, "nacionalidade": "Coréia do Sul"}
                 }
             },
             "LOUD": {
                 "jogadores": {
-                    "Top": {"nome": "Robo", "skill": 84, "nacionalidade": "Brasil"},
-                    "Jungle": {"nome": "Gryffinn", "skill": 83, "nacionalidade": "Estados Unidos"},
-                    "Mid": {"nome": "Jool", "skill": 85, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "Route", "skill": 88, "nacionalidade": "Coréia do Sul", "best_player": True},
-                    "Support": {"nome": "RedBert", "skill": 83, "nacionalidade": "Brasil"}
+                    "Top": {"nome": "Robo", "skill": 78, "nacionalidade": "Brasil"},
+                    "Jungle": {"nome": "Gryffinn", "skill": 77, "nacionalidade": "Estados Unidos"},
+                    "Mid": {"nome": "Jool", "skill": 83, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "Route", "skill": 84, "nacionalidade": "Coréia do Sul", "best_player": True},
+                    "Support": {"nome": "RedBert", "skill": 76, "nacionalidade": "Brasil"}
                 }
             },
             "RED Canids": {
                 "jogadores": {
-                    "Top": {"nome": "fNb", "skill": 82, "nacionalidade": "Brasil"},
-                    "Jungle": {"nome": "DOOM", "skill": 83, "nacionalidade": "Brasil"},
-                    "Mid": {"nome": "Kaze", "skill": 84, "nacionalidade": "Argentina"},
-                    "ADC": {"nome": "Rabelo", "skill": 83, "nacionalidade": "Brasil"},
-                    "Support": {"nome": "frosty", "skill": 85, "nacionalidade": "Brasil", "best_player": True}
+                    "Top": {"nome": "fNb", "skill": 75, "nacionalidade": "Brasil"},
+                    "Jungle": {"nome": "DOOM", "skill": 76, "nacionalidade": "Brasil"},
+                    "Mid": {"nome": "Kaze", "skill": 77, "nacionalidade": "Argentina"},
+                    "ADC": {"nome": "Rabelo", "skill": 76, "nacionalidade": "Brasil"},
+                    "Support": {"nome": "frosty", "skill": 79, "nacionalidade": "Brasil", "best_player": True}
                 }
             },
             "FURIA": {
                 "jogadores": {
-                    "Top": {"nome": "Guigo", "skill": 82, "nacionalidade": "Brasil"},
-                    "Jungle": {"nome": "Tatu", "skill": 85, "nacionalidade": "Brasil", "best_player": True},
-                    "Mid": {"nome": "Tutsz", "skill": 83, "nacionalidade": "Brasil"},
-                    "ADC": {"nome": "Ayu", "skill": 82, "nacionalidade": "Brasil"},
-                    "Support": {"nome": "JoJo", "skill": 81, "nacionalidade": "Brasil"}
+                    "Top": {"nome": "Guigo", "skill": 75, "nacionalidade": "Brasil"},
+                    "Jungle": {"nome": "Tatu", "skill": 80, "nacionalidade": "Brasil", "best_player": True},
+                    "Mid": {"nome": "Tutsz", "skill": 76, "nacionalidade": "Brasil"},
+                    "ADC": {"nome": "Ayu", "skill": 75, "nacionalidade": "Brasil"},
+                    "Support": {"nome": "JoJo", "skill": 74, "nacionalidade": "Brasil"}
                 }
             },
             "Fluxo": {
                 "jogadores": {
-                    "Top": {"nome": "curty", "skill": 81, "nacionalidade": "Brasil"},
-                    "Jungle": {"nome": "Yampi", "skill": 83, "nacionalidade": "Brasil"},
-                    "Mid": {"nome": "Fuuu", "skill": 82, "nacionalidade": "Brasil"},
-                    "ADC": {"nome": "Marvin", "skill": 82, "nacionalidade": "Brasil"},
-                    "Support": {"nome": "ProDelta", "skill": 81, "nacionalidade": "Brasil"}
+                    "Top": {"nome": "curty", "skill": 73, "nacionalidade": "Brasil"},
+                    "Jungle": {"nome": "Yampi", "skill": 75, "nacionalidade": "Brasil"},
+                    "Mid": {"nome": "Fuuu", "skill": 74, "nacionalidade": "Brasil"},
+                    "ADC": {"nome": "Marvin", "skill": 74, "nacionalidade": "Brasil"},
+                    "Support": {"nome": "ProDelta", "skill": 73, "nacionalidade": "Brasil"}
                 }
             },
             "KaBuM! Esports": {
                 "jogadores": {
-                    "Top": {"nome": "HiRit", "skill": 85, "nacionalidade": "Coréia do Sul", "best_player": True},
-                    "Jungle": {"nome": "Wiz", "skill": 82, "nacionalidade": "Coréia do Sul"},
-                    "Mid": {"nome": "Grevthar", "skill": 79, "nacionalidade": "Brasil"},
-                    "ADC": {"nome": "Duduhh", "skill": 78, "nacionalidade": "Brasil"},
-                    "Support": {"nome": "Guigs", "skill": 77, "nacionalidade": "Brasil"}
+                    "Top": {"nome": "HiRit", "skill": 83, "nacionalidade": "Coréia do Sul", "best_player": True},
+                    "Jungle": {"nome": "Wiz", "skill": 81, "nacionalidade": "Coréia do Sul"},
+                    "Mid": {"nome": "Grevthar", "skill": 72, "nacionalidade": "Brasil"},
+                    "ADC": {"nome": "Duduhh", "skill": 71, "nacionalidade": "Brasil"},
+                    "Support": {"nome": "Guigs", "skill": 70, "nacionalidade": "Brasil"}
                 }
             },
             "INTZ": {
@@ -634,56 +775,56 @@ TEAMS_BY_REGION = {
         "times": {
             "Estral Esports": {
                 "jogadores": {
-                    "Top": {"nome": "Summit", "skill": 86, "nacionalidade": "Coréia do Sul", "best_player": True},
-                    "Jungle": {"nome": "Solid", "skill": 80, "nacionalidade": "Peru"},
-                    "Mid": {"nome": "cody", "skill": 78, "nacionalidade": "Chile"},
-                    "ADC": {"nome": "Ghost", "skill": 84, "nacionalidade": "Coréia do Sul"},
-                    "Support": {"nome": "Winsome", "skill": 80, "nacionalidade": "Estados Unidos"}
+                    "Top": {"nome": "Summit", "skill": 84, "nacionalidade": "Coréia do Sul", "best_player": True},
+                    "Jungle": {"nome": "Solid", "skill": 63, "nacionalidade": "Peru"},
+                    "Mid": {"nome": "cody", "skill": 61, "nacionalidade": "Chile"},
+                    "ADC": {"nome": "Ghost", "skill": 82, "nacionalidade": "Coréia do Sul"},
+                    "Support": {"nome": "Winsome", "skill": 71, "nacionalidade": "Estados Unidos"}
                 }
             },
             "Isurus": {
                 "jogadores": {
-                    "Top": {"nome": "Zamudo", "skill": 80, "nacionalidade": "Canadá"},
-                    "Jungle": {"nome": "Josedeodo", "skill": 87, "nacionalidade": "Argentina", "best_player": True},
-                    "Mid": {"nome": "Keine", "skill": 83, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "Snaker", "skill": 81, "nacionalidade": "Argentina"},
-                    "Support": {"nome": "Ackerman", "skill": 80, "nacionalidade": "Argentina"}
+                    "Top": {"nome": "Zamudo", "skill": 71, "nacionalidade": "Canadá"},
+                    "Jungle": {"nome": "Josedeodo", "skill": 70, "nacionalidade": "Argentina", "best_player": True},
+                    "Mid": {"nome": "Keine", "skill": 81, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "Snaker", "skill": 64, "nacionalidade": "Argentina"},
+                    "Support": {"nome": "Ackerman", "skill": 63, "nacionalidade": "Argentina"}
                 }
             },
             "Rainbow7": {
                 "jogadores": {
-                    "Top": {"nome": "Srtty", "skill": 78, "nacionalidade": "Austrália"},
-                    "Jungle": {"nome": "Oddielan", "skill": 79, "nacionalidade": "Peru"},
-                    "Mid": {"nome": "Saint", "skill": 82, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "Hena", "skill": 81, "nacionalidade": "Coréia do Sul"},
-                    "Support": {"nome": "Lyonz", "skill": 79, "nacionalidade": "Argentina"}
+                    "Top": {"nome": "Srtty", "skill": 68, "nacionalidade": "Austrália"},
+                    "Jungle": {"nome": "Oddielan", "skill": 62, "nacionalidade": "Peru"},
+                    "Mid": {"nome": "Saint", "skill": 80, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "Hena", "skill": 79, "nacionalidade": "Coréia do Sul"},
+                    "Support": {"nome": "Lyonz", "skill": 62, "nacionalidade": "Argentina"}
                 }
             },
             "Team Aze": {
                 "jogadores": {
-                    "Top": {"nome": "Acce", "skill": 78, "nacionalidade": "Argentina"},
-                    "Jungle": {"nome": "Ellim", "skill": 82, "nacionalidade": "Coréia do Sul"},
-                    "Mid": {"nome": "Aloned", "skill": 77, "nacionalidade": "Chile"},
-                    "ADC": {"nome": "Cheoni", "skill": 83, "nacionalidade": "Coréia do Sul"},
-                    "Support": {"nome": "Straight", "skill": 76, "nacionalidade": "Equador"}
+                    "Top": {"nome": "Acce", "skill": 60, "nacionalidade": "Argentina"},
+                    "Jungle": {"nome": "Ellim", "skill": 80, "nacionalidade": "Coréia do Sul"},
+                    "Mid": {"nome": "Aloned", "skill": 59, "nacionalidade": "Chile"},
+                    "ADC": {"nome": "Cheoni", "skill": 81, "nacionalidade": "Coréia do Sul"},
+                    "Support": {"nome": "Straight", "skill": 58, "nacionalidade": "Equador"}
                 }
             },
             "INFINITY": {
                 "jogadores": {
-                    "Top": {"nome": "ZOEN", "skill": 78, "nacionalidade": "Argentina"},
-                    "Jungle": {"nome": "STEPZ", "skill": 77, "nacionalidade": "Venezuela"},
-                    "Mid": {"nome": "Skyy", "skill": 79, "nacionalidade": "México"},
-                    "ADC": {"nome": "VirusFX", "skill": 78, "nacionalidade": "México"},
-                    "Support": {"nome": "TopLop", "skill": 77, "nacionalidade": "Argentina"}
+                    "Top": {"nome": "ZOEN", "skill": 58, "nacionalidade": "Argentina"},
+                    "Jungle": {"nome": "STEPZ", "skill": 57, "nacionalidade": "Venezuela"},
+                    "Mid": {"nome": "Skyy", "skill": 59, "nacionalidade": "México"},
+                    "ADC": {"nome": "VirusFX", "skill": 58, "nacionalidade": "México"},
+                    "Support": {"nome": "TopLop", "skill": 57, "nacionalidade": "Argentina"}
                 }
             },
             "All Knights": {
                 "jogadores": {
-                    "Top": {"nome": "Hidan", "skill": 79, "nacionalidade": "Brasil"},
-                    "Jungle": {"nome": "Grell", "skill": 83, "nacionalidade": "México", "best_player": True},
-                    "Mid": {"nome": "Nobody", "skill": 78, "nacionalidade": "Argentina"},
-                    "ADC": {"nome": "Trigo", "skill": 79, "nacionalidade": "Brasil"},
-                    "Support": {"nome": "Gastruks", "skill": 77, "nacionalidade": "Argentina"}
+                    "Top": {"nome": "Hidan", "skill": 71, "nacionalidade": "Brasil"},
+                    "Jungle": {"nome": "Grell", "skill": 67, "nacionalidade": "México", "best_player": True},
+                    "Mid": {"nome": "Nobody", "skill": 58, "nacionalidade": "Argentina"},
+                    "ADC": {"nome": "Trigo", "skill": 71, "nacionalidade": "Brasil"},
+                    "Support": {"nome": "Gastruks", "skill": 57, "nacionalidade": "Argentina"}
                 }
             }
         }
@@ -695,58 +836,58 @@ TEAMS_BY_REGION = {
             "100Thieves": {
                 "jogadores": {
                     "Top": {
-                        "titular": {"nome": "Dhokla", "skill": 82, "nacionalidade": "Estados Unidos"},
-                        "reserva": {"nome": "Sniper", "skill": 78, "nacionalidade": "Canadá"}
+                        "titular": {"nome": "Dhokla", "skill": 77, "nacionalidade": "Estados Unidos"},
+                        "reserva": {"nome": "Sniper", "skill": 73, "nacionalidade": "Canadá"}
                     },
-                    "Jungle": {"nome": "River", "skill": 85, "nacionalidade": "Coréia do Sul"},
-                    "Mid": {"nome": "Quid", "skill": 84, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "FBI", "skill": 86, "nacionalidade": "Austrália"},
-                    "Support": {"nome": "Eyla", "skill": 83, "nacionalidade": "Austrália"}
+                    "Jungle": {"nome": "River", "skill": 87, "nacionalidade": "Coréia do Sul"},
+                    "Mid": {"nome": "Quid", "skill": 86, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "FBI", "skill": 81, "nacionalidade": "Austrália"},
+                    "Support": {"nome": "Eyla", "skill": 78, "nacionalidade": "Austrália"}
                 }
             },
             "Cloud9": {
                 "jogadores": {
-                    "Top": {"nome": "Thanatos", "skill": 84, "nacionalidade": "Coréia do Sul"},
-                    "Jungle": {"nome": "Blaber", "skill": 87, "nacionalidade": "Estados Unidos"},
-                    "Mid": {"nome": "Loki", "skill": 85, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "Zven", "skill": 86, "nacionalidade": "Dinamarca"},
-                    "Support": {"nome": "Vulcan", "skill": 85, "nacionalidade": "Canadá"}
+                    "Top": {"nome": "Thanatos", "skill": 86, "nacionalidade": "Coréia do Sul"},
+                    "Jungle": {"nome": "Blaber", "skill": 83, "nacionalidade": "Estados Unidos", "best_player": True},
+                    "Mid": {"nome": "Loki", "skill": 87, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "Zven", "skill": 82, "nacionalidade": "Dinamarca"},
+                    "Support": {"nome": "Vulcan", "skill": 81, "nacionalidade": "Canadá"}
                 }
             },
             "Dignitas": {
                 "jogadores": {
-                    "Top": {"nome": "Photon", "skill": 83, "nacionalidade": "Coréia do Sul"},
-                    "Jungle": {"nome": "Sheiden", "skill": 80, "nacionalidade": "Filipinas"},
-                    "Mid": {"nome": "Keine", "skill": 82, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "Tomo", "skill": 81, "nacionalidade": "Estados Unidos"},
-                    "Support": {"nome": "Isles", "skill": 80, "nacionalidade": "Austrália"}
+                    "Top": {"nome": "Photon", "skill": 85, "nacionalidade": "Coréia do Sul"},
+                    "Jungle": {"nome": "Sheiden", "skill": 75, "nacionalidade": "Filipinas"},
+                    "Mid": {"nome": "Keine", "skill": 84, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "Tomo", "skill": 76, "nacionalidade": "Estados Unidos"},
+                    "Support": {"nome": "Isles", "skill": 75, "nacionalidade": "Austrália"}
                 }
             },
             "FlyQuest": {
                 "jogadores": {
-                    "Top": {"nome": "Bwipo", "skill": 88, "nacionalidade": "Bélgica", "best_player": True},
-                    "Jungle": {"nome": "Inspired", "skill": 86, "nacionalidade": "Polônia"},
-                    "Mid": {"nome": "Quad", "skill": 83, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "Massu", "skill": 82, "nacionalidade": "Canadá"},
-                    "Support": {"nome": "Busio", "skill": 81, "nacionalidade": "Estados Unidos"}
+                    "Top": {"nome": "Bwipo", "skill": 84, "nacionalidade": "Bélgica", "best_player": True},
+                    "Jungle": {"nome": "Inspired", "skill": 83, "nacionalidade": "Polônia"},
+                    "Mid": {"nome": "Quad", "skill": 85, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "Massu", "skill": 77, "nacionalidade": "Canadá"},
+                    "Support": {"nome": "Busio", "skill": 76, "nacionalidade": "Estados Unidos"}
                 }
             },
             "Shopify Rebellion": {
                 "jogadores": {
-                    "Top": {"nome": "Fudge", "skill": 82, "nacionalidade": "Austrália"},
-                    "Jungle": {"nome": "Contractz", "skill": 80, "nacionalidade": "Estados Unidos"},
-                    "Mid": {"nome": "Palafox", "skill": 79, "nacionalidade": "Estados Unidos"},
-                    "ADC": {"nome": "Bvoy", "skill": 81, "nacionalidade": "Coréia do Sul"},
-                    "Support": {"nome": "Ceos", "skill": 85, "nacionalidade": "Brasil", "best_player": True}
+                    "Top": {"nome": "Fudge", "skill": 77, "nacionalidade": "Austrália"},
+                    "Jungle": {"nome": "Contractz", "skill": 75, "nacionalidade": "Estados Unidos"},
+                    "Mid": {"nome": "Palafox", "skill": 74, "nacionalidade": "Estados Unidos"},
+                    "ADC": {"nome": "Bvoy", "skill": 83, "nacionalidade": "Coréia do Sul"},
+                    "Support": {"nome": "Ceos", "skill": 78, "nacionalidade": "Brasil", "best_player": True}
                 }
             },
             "Team Liquid": {
                 "jogadores": {
-                    "Top": {"nome": "Impact", "skill": 86, "nacionalidade": "Coréia do Sul", "world_champion": True},
-                    "Jungle": {"nome": "Yuuji", "skill": 82, "nacionalidade": "Mongólia"},
-                    "Mid": {"nome": "APA", "skill": 83, "nacionalidade": "Estados Unidos"},
-                    "ADC": {"nome": "Yeon", "skill": 84, "nacionalidade": "Estados Unidos"},
-                    "Support": {"nome": "CoreJJ", "skill": 90, "nacionalidade": "Coréia do Sul", "world_champion": True, "best_player": True, "goat": True}
+                    "Top": {"nome": "Impact", "skill": 88, "nacionalidade": "Coréia do Sul", "world_champion": True},
+                    "Jungle": {"nome": "Yuuji", "skill": 77, "nacionalidade": "Mongólia"},
+                    "Mid": {"nome": "APA", "skill": 78, "nacionalidade": "Estados Unidos"},
+                    "ADC": {"nome": "Yeon", "skill": 79, "nacionalidade": "Estados Unidos"},
+                    "Support": {"nome": "CoreJJ", "skill": 89, "nacionalidade": "Coréia do Sul", "world_champion": True, "best_player": True, "goat": True}
                 }
             },
             "Immortals": {
@@ -775,74 +916,74 @@ TEAMS_BY_REGION = {
         "times": {
             "DetonatioN FocusMe": {
                 "jogadores": {
-                    "Top": {"nome": "Momo", "skill": 82, "nacionalidade": "Japão"},
-                    "Jungle": {"nome": "Citrus", "skill": 83, "nacionalidade": "Coréia do Sul"},
-                    "Mid": {"nome": "Aria", "skill": 87, "nacionalidade": "Coréia do Sul", "best_player": True},
-                    "ADC": {"nome": "Kakkun", "skill": 83, "nacionalidade": "Japão"},
-                    "Support": {"nome": "Harp", "skill": 82, "nacionalidade": "Japão"}
+                    "Top": {"nome": "Momo", "skill": 73, "nacionalidade": "Japão"},
+                    "Jungle": {"nome": "Citrus", "skill": 82, "nacionalidade": "Coréia do Sul"},
+                    "Mid": {"nome": "Aria", "skill": 85, "nacionalidade": "Coréia do Sul", "best_player": True},
+                    "ADC": {"nome": "Kakkun", "skill": 74, "nacionalidade": "Japão"},
+                    "Support": {"nome": "Harp", "skill": 72, "nacionalidade": "Japão"}
                 }
             },
             "Sengoku Gaming": {
                 "jogadores": {
-                    "Top": {"nome": "Washidai", "skill": 81, "nacionalidade": "Japão"},
-                    "Jungle": {"nome": "Van", "skill": 83, "nacionalidade": "Coréia do Sul"},
-                    "Mid": {"nome": "DICE", "skill": 84, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "Yuhi", "skill": 82, "nacionalidade": "Japão"},
-                    "Support": {"nome": "Hetel", "skill": 81, "nacionalidade": "Japão"}
+                    "Top": {"nome": "Washidai", "skill": 71, "nacionalidade": "Japão"},
+                    "Jungle": {"nome": "Van", "skill": 81, "nacionalidade": "Coréia do Sul"},
+                    "Mid": {"nome": "DICE", "skill": 82, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "Yuhi", "skill": 72, "nacionalidade": "Japão"},
+                    "Support": {"nome": "Hetel", "skill": 70, "nacionalidade": "Japão"}
                 }
             },
             "Fukuoka SoftBank HAWKS Gaming": {
                 "jogadores": {
-                    "Top": {"nome": "Evi", "skill": 86, "nacionalidade": "Japão", "best_player": True},
-                    "Jungle": {"nome": "Courage", "skill": 83, "nacionalidade": "Coréia do Sul"},
-                    "Mid": {"nome": "FATE", "skill": 85, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "Marble", "skill": 82, "nacionalidade": "Japão"},
-                    "Support": {"nome": "Gaeng", "skill": 83, "nacionalidade": "Coréia do Sul"}
+                    "Top": {"nome": "Evi", "skill": 77, "nacionalidade": "Japão", "best_player": True},
+                    "Jungle": {"nome": "Courage", "skill": 82, "nacionalidade": "Coréia do Sul"},
+                    "Mid": {"nome": "FATE", "skill": 83, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "Marble", "skill": 73, "nacionalidade": "Japão"},
+                    "Support": {"nome": "Gaeng", "skill": 81, "nacionalidade": "Coréia do Sul"}
                 }
             },
             "Rascal Jester": {
                 "jogadores": {
-                    "Top": {"nome": "TaNa", "skill": 83, "nacionalidade": "Coréia do Sul"},
-                    "Jungle": {"nome": "hachamecha", "skill": 81, "nacionalidade": "Japão"},
-                    "Mid": {"nome": "Recap", "skill": 80, "nacionalidade": "Japão"},
-                    "ADC": {"nome": "Ssol", "skill": 82, "nacionalidade": "Coréia do Sul"},
-                    "Support": {"nome": "Corporal", "skill": 80, "nacionalidade": "Japão"}
+                    "Top": {"nome": "TaNa", "skill": 81, "nacionalidade": "Coréia do Sul"},
+                    "Jungle": {"nome": "hachamecha", "skill": 71, "nacionalidade": "Japão"},
+                    "Mid": {"nome": "Recap", "skill": 70, "nacionalidade": "Japão"},
+                    "ADC": {"nome": "Ssol", "skill": 80, "nacionalidade": "Coréia do Sul"},
+                    "Support": {"nome": "Corporal", "skill": 69, "nacionalidade": "Japão"}
                 }
             },
             "Crest Gaming Act": {
                 "jogadores": {
-                    "Top": {"nome": "Nap", "skill": 80, "nacionalidade": "Japão"},
-                    "Jungle": {"nome": "Cassin", "skill": 82, "nacionalidade": "Coréia do Sul"},
-                    "Mid": {"nome": "Eugeo", "skill": 81, "nacionalidade": "Japão"},
-                    "ADC": {"nome": "Honey", "skill": 83, "nacionalidade": "Coréia do Sul"},
-                    "Support": {"nome": "Primo", "skill": 80, "nacionalidade": "Japão"}
+                    "Top": {"nome": "Nap", "skill": 69, "nacionalidade": "Japão"},
+                    "Jungle": {"nome": "Cassin", "skill": 80, "nacionalidade": "Coréia do Sul"},
+                    "Mid": {"nome": "Eugeo", "skill": 70, "nacionalidade": "Japão"},
+                    "ADC": {"nome": "Honey", "skill": 81, "nacionalidade": "Coréia do Sul"},
+                    "Support": {"nome": "Primo", "skill": 68, "nacionalidade": "Japão"}
                 }
             },
             "Burning Core": {
                 "jogadores": {
-                    "Top": {"nome": "tol2", "skill": 81, "nacionalidade": "Japão"},
-                    "Jungle": {"nome": "Brucee", "skill": 80, "nacionalidade": "Peru"},
-                    "Mid": {"nome": "R0se", "skill": 83, "nacionalidade": "Coréia do Sul"},
-                    "ADC": {"nome": "L1mit", "skill": 82, "nacionalidade": "Coréia do Sul"},
-                    "Support": {"nome": "Enapon", "skill": 80, "nacionalidade": "Japão"}
+                    "Top": {"nome": "tol2", "skill": 70, "nacionalidade": "Japão"},
+                    "Jungle": {"nome": "Brucee", "skill": 69, "nacionalidade": "Peru"},
+                    "Mid": {"nome": "R0se", "skill": 81, "nacionalidade": "Coréia do Sul"},
+                    "ADC": {"nome": "L1mit", "skill": 80, "nacionalidade": "Coréia do Sul"},
+                    "Support": {"nome": "Enapon", "skill": 68, "nacionalidade": "Japão"}
                 }
             },
             "AXIZ": {
                 "jogadores": {
-                    "Top": {"nome": "Ricky", "skill": 77, "nacionalidade": "Japão"},
-                    "Jungle": {"nome": "Hoglet", "skill": 80, "nacionalidade": "Coréia do Sul"},
-                    "Mid": {"nome": "Megumiin", "skill": 78, "nacionalidade": "Japão"},
-                    "ADC": {"nome": "Valkyrie", "skill": 79, "nacionalidade": "Coréia do Sul"},
-                    "Support": {"nome": "Kentakki", "skill": 77, "nacionalidade": "Japão"}
+                    "Top": {"nome": "Ricky", "skill": 67, "nacionalidade": "Japão"},
+                    "Jungle": {"nome": "Hoglet", "skill": 79, "nacionalidade": "Coréia do Sul"},
+                    "Mid": {"nome": "Megumiin", "skill": 68, "nacionalidade": "Japão"},
+                    "ADC": {"nome": "Valkyrie", "skill": 78, "nacionalidade": "Coréia do Sul"},
+                    "Support": {"nome": "Kentakki", "skill": 66, "nacionalidade": "Japão"}
                 }
             },
             "V3 Esports": {
                 "jogadores": {
-                    "Top": {"nome": "Taicho", "skill": 77, "nacionalidade": "Japão"},
-                    "Jungle": {"nome": "89", "skill": 76, "nacionalidade": "Japão"},
-                    "Mid": {"nome": "sucuranbul", "skill": 77, "nacionalidade": "Japão"},
-                    "ADC": {"nome": "ezman", "skill": 78, "nacionalidade": "Japão"},
-                    "Support": {"nome": "Sh1vq", "skill": 76, "nacionalidade": "Japão"}
+                    "Top": {"nome": "Taicho", "skill": 66, "nacionalidade": "Japão"},
+                    "Jungle": {"nome": "89", "skill": 65, "nacionalidade": "Japão"},
+                    "Mid": {"nome": "sucuranbul", "skill": 66, "nacionalidade": "Japão"},
+                    "ADC": {"nome": "ezman", "skill": 67, "nacionalidade": "Japão"},
+                    "Support": {"nome": "Sh1vq", "skill": 65, "nacionalidade": "Japão"}
                 }
             }
         }
@@ -975,6 +1116,21 @@ def random_name(region: str | None = None) -> str:
         suffixes = ["Blade", "Fox", "Tiger", "Wolf", "Dragon", "Storm", "Phoenix", "Ghost", "Rift", "Flash"]
     return random.choice(prefixes) + random.choice(suffixes) + str(random.randint(1,99))
 
+def get_base_skill_range(nationality: str) -> tuple[int, int]:
+    """Get the base skill range for a player based on their nationality."""
+    # Define base ranges for each region based on their ranking
+    REGION_RANGES = {
+        "Coréia do Sul": (70, 95),  # Best region
+        "China": (65, 90),
+        "Europa": (60, 85),
+        "América do Norte": (55, 80),
+        "Brasil": (50, 75),
+        "Japão": (45, 70),
+        "Turquia": (40, 65),
+        "LLA": (35, 60)  # Lowest ranked region
+    }
+    return REGION_RANGES.get(nationality, (40, 65))  # Default range for unknown regions
+
 def generate_free_agent(region: str | None = None, force_native: bool = False) -> Player:
     role = random.choice(ROLES)
     
@@ -985,13 +1141,18 @@ def generate_free_agent(region: str | None = None, force_native: bool = False) -
         # 70% chance for native player if region is specified
         nationality = region
     else:
-        nationality = random.choice(list(REGIONS.keys()))
+        # Weight the random choice based on region strength
+        weights = [REGIONS[r]["region_strength"] for r in REGIONS.keys()]
+        nationality = random.choices(list(REGIONS.keys()), weights=weights)[0]
     
     # Generate name based on nationality
     name = random_name(nationality)
     
-    # Skill calculation with regional strength bonuses
-    base_skill = random.randint(40, 85)
+    # Get skill range based on nationality and calculate skill
+    min_skill, max_skill = get_base_skill_range(nationality)
+    base_skill = random.randint(min_skill, max_skill)
+    
+    # Apply regional strength modifier
     region_strength = REGIONS[nationality]["region_strength"]
     skill = min(100, int(base_skill * region_strength))  # Apply region strength directly
     
@@ -1017,6 +1178,107 @@ def calculate_player_cost(player: Player, team_region: str) -> int:
         cost_multiplier = REGIONS[player.nationality]["player_cost_multiplier"]
         return int(base_cost * cost_multiplier)
     return base_cost
+
+def get_team_region_by_name(team_name: str) -> str:
+    for region_name, region_data in TEAMS_BY_REGION.items():
+        if team_name in region_data.get("times", {}):
+            return region_name
+    return "Unknown"
+
+def hire_from_other_teams(team: Team):
+    print("\n-- Mercado de Transferências --")
+    
+    # List players from other teams
+    available_players = []
+    for region_name, region in TEAMS_BY_REGION.items():
+        for team_name, team_data in region["times"].items():
+            if team_name != team.name:  # Don't show players from the user's team
+                for role, player_data in team_data["jogadores"].items():
+                    if isinstance(player_data, dict) and "nome" in player_data:
+                        # Create player object with region-based nationality if not specified
+                        player = Player(
+                            name=player_data["nome"],
+                            role=role,
+                            skill=player_data["skill"],
+                            nationality=player_data.get("nacionalidade", region_name)
+                        )
+                        # Calculate transfer cost based on skill and region
+                        base_cost = player_data["skill"] * 1000
+                        
+                        # Regional cost multipliers
+                        region_multiplier = REGIONS[region_name]["player_cost_multiplier"]
+                        transfer_cost = base_cost * region_multiplier
+                        
+                        # Additional multipliers for special attributes
+                        if player_data.get("world_champion"):
+                            transfer_cost *= 1.5
+                        if player_data.get("best_player"):
+                            transfer_cost *= 1.3
+                        
+                        # Premium for players from stronger regions
+                        region_strength_premium = REGIONS[region_name]["region_strength"]
+                        transfer_cost *= region_strength_premium
+                        
+                        available_players.append({
+                            "player": player,
+                            "team": team_name,
+                            "cost": transfer_cost
+                        })
+    
+    # Sort players by skill level
+    available_players.sort(key=lambda x: x["player"].skill, reverse=True)
+    
+    # Display available players
+    for i, data in enumerate(available_players, 1):
+        player = data["player"]
+        status = []
+        if player.nationality != team.region:
+            status.append("Import")
+        print(f"{i}. {format_player(player)} - Time: {data['team']} - Preço: ${data['cost']:,}")
+    
+    choice = input("Escolha um jogador para contratar (número) ou enter para voltar: ").strip()
+    if not choice:
+        return
+        
+    try:
+        idx = int(choice) - 1
+        if 0 <= idx < len(available_players):
+            data = available_players[idx]
+            player = data["player"]
+            
+            # Check import limits
+            if player.nationality != team.region and count_imports(team) >= 2:
+                print("Limite de imports atingido (máximo 2 jogadores).")
+                return
+                
+            # Check if team can afford the player
+            if team.money < data["cost"]:
+                print(f"Time não tem dinheiro suficiente. Necessário: ${data['cost']:,}")
+                return
+                
+            # Ask for confirmation
+            confirm = input(f"Confirmar contratação de {player.name} por ${data['cost']:,}? (s/n): ").lower()
+            if confirm != 's':
+                return
+                
+            # Complete the transfer
+            team.money -= data["cost"]
+            
+            # Add player to the team
+            if player.role in team.players:
+                # Move current player to reserves if exists
+                current = team.players[player.role]
+                if current:
+                    if "reserves" not in team.players:
+                        team.players["reserves"] = {}
+                    team.players["reserves"][player.role] = current
+            
+            team.players[player.role] = player
+            print(f"\n{player.name} contratado com sucesso!")
+            print(f"Dinheiro restante: ${team.money:,}")
+            
+    except ValueError:
+        print("Escolha inválida.")
 
 def hire_player(team: Team):
     print("\n-- Mercado de Free Agents --")
@@ -1118,10 +1380,33 @@ def train_player(team: Team):
             p = team.players[idx]
             cost = p.skill * 20
             if team.money >= cost:
-                improvement = random.randint(1, 6)
-                p.skill = clamp(p.skill + improvement, 0, 100)
+                # Calculate improvement based on player's nationality and current skill
+                min_skill, max_skill = get_base_skill_range(p.nationality)
+                region_strength = REGIONS[p.nationality]["region_strength"]
+                
+                # Players from stronger regions improve faster
+                base_improvement = random.randint(1, 4)
+                region_bonus = int(base_improvement * region_strength)
+                
+                # Calculate skill cap based on nationality
+                skill_cap = min(100, max_skill + 10)  # Allow slightly higher than base range
+                
+                # Apply improvement with diminishing returns near the skill cap
+                if p.skill >= skill_cap - 10:
+                    # Reduced improvement near cap
+                    improvement = max(1, region_bonus // 2)
+                else:
+                    improvement = region_bonus
+                
+                old_skill = p.skill
+                p.skill = clamp(p.skill + improvement, 0, skill_cap)
+                actual_improvement = p.skill - old_skill
+                
                 team.money -= cost
-                print(f"{p.name} treinado. +{improvement} skill -> {p.skill}. Custeio: ${cost}. Saldo: ${team.money}")
+                print(f"{p.name} treinado. +{actual_improvement} skill -> {p.skill}")
+                if p.skill >= skill_cap - 5:
+                    print(f"⚠️ {p.name} está próximo do seu potencial máximo ({skill_cap})")
+                print(f"Custeio: ${cost}. Saldo: ${team.money}")
             else:
                 print("Dinheiro insuficiente.")
         else:
@@ -1434,7 +1719,7 @@ def create_player_from_data(player_data, role):
         
         nome = player_data["nome"]
         skill = player_data["skill"]
-        nationality = player_data.get("nacionalidade", "Coréia do Sul")  # Default para Coreia
+        nationality = player_data.get("nacionalidade", "Coréia")  # Default para Coreia
         
         # Seleciona campeões apropriados para a role
         role_champs = CHAMPIONS[role]
@@ -1483,18 +1768,9 @@ def generate_ai_team(region=None, team_name=None):
                     if isinstance(player_data, dict) and "titular" in player_data:
                         player_data = player_data["titular"]
                     
-                    player = create_player_from_data(player_data, role)
+                    # Create player using helper function that handles nationality
+                    player = create_player_from_data(player_data, role, region)
                     if player:
-                        # Adiciona atributos especiais se existirem
-                        if isinstance(player_data, dict):
-                            if player_data.get("world_champion"):
-                                player.world_champion = True
-                            if player_data.get("best_player"):
-                                player.best_player = True
-                            if player_data.get("goat"):
-                                player.goat = True
-                            if "nacionalidade" in player_data:
-                                player.nationality = player_data["nacionalidade"]
                         players.append(player)
                         continue
                 
@@ -1615,7 +1891,7 @@ def play_championship(team: Team):
             if t1 is team or t2 is team:
                 player_team = team
                 opponent = t2 if t1 is team else t1
-
+                print(f"\nSeu adversário nesta rodada: {opponent.name} ({opponent.region})")
                 print("Você irá jogar esta partida!")
                 lineup_player, picks_player, _ = pick_lineup_and_draft(player_team)
                 if lineup_player is None:
@@ -1623,39 +1899,108 @@ def play_championship(team: Team):
                     winner = opponent
                     next_round.append(winner)
                     continue
-                strat_player = choose_strategy()
-                lineup_opp, picks_opp, strat_opp = build_lineup_from_team_local(opponent)
-                # Initialize empty picks if not defined
-                if picks_player is None:
-                    picks_player = {}
-                    for role in ROLES:
-                        picks_player[role] = random.choice(get_role_champions(role))
-                res = simulate_match(lineup_player, picks_player, strat_player, opponent_team=(lineup_opp, picks_opp, strat_opp))
-                winner = player_team if res["winner"] == "MinhaEquipe" else opponent
-                print(f"Power: {res['my_power']:.1f} vs {res['opp_power']:.1f}")
-                print(f"Vencedor: {winner.name}")
-            else:
-                # Both AI teams: simulate automatically
-                lineup1_local, picks1_local, strat1_local = build_lineup_from_team_local(t1)
-                lineup2_local, picks2_local, strat2_local = build_lineup_from_team_local(t2)
-                res = simulate_match(lineup1_local, picks1_local, strat1_local, opponent_team=(lineup2_local, picks2_local, strat2_local))
-                winner = t1 if res["winner"] == "MinhaEquipe" else t2
-                print(f"Vencedor: {winner.name} (Power {res['my_power']:.1f} vs {res['opp_power']:.1f})")
-
+            # Simulação de partida
+            result = simulate_match(t1.players, {}, "Equilibrada", (t2.players, {}, "Equilibrada"))
+            winner = t1 if result["winner"] == "MinhaEquipe" else t2
             next_round.append(winner)
-        # advance bracket
+            print(f"Vencedor: {winner.name}")
+        
         current = next_round
         round_num += 1
+    
+    print("\n=== Campeão do Torneio ===")
+    print(f"Parabéns, {current[0].name} é o campeão!")
 
-    # finish
-    champion = current[0]
-    print(f"\n=== Campeão do Campeonato: {champion.name} ===")
-    if champion is team:
-        prize = 100000
-        team.money += prize
-        print(f"Parabéns! Você venceu o campeonato e ganhou ${prize}. Saldo: ${team.money}")
-    else:
-        print("Você não venceu o campeonato desta vez.")
+    # =================== TEMPORADA COMPLETA E EXIBIÇÃO DE TIMES ===================
+    def jogar_temporada_completa(user_team_name, user_region):
+        print("\n=== Temporada Completa ===")
+        for split in [1, 2]:
+            print(f"\n--- Split {split} ---")
+            qualified = {}
+            user_league = None
+            for league_name, league in LEAGUES.items():
+                region = league["region"]
+                teams = TEAMS_BY_REGION[region]["fortes"] + TEAMS_BY_REGION[region]["fracos"]
+                if region == user_region and user_team_name not in teams:
+                    teams.append(user_team_name)
+                print(f"\n{league_name} - Participantes: {', '.join(teams)}")
+                # Grupos
+                if "groups" in league:
+                    random.shuffle(teams)
+                    groups = [teams[i*league["group_size"]:(i+1)*league["group_size"]] for i in range(league["groups"])]
+                    for idx, group in enumerate(groups, 1):
+                        print(f"Grupo {idx}: {', '.join(group)}")
+                    # Rodadas de grupo
+                    for idx, group in enumerate(groups, 1):
+                        print(f"\nRodadas do Grupo {idx}:")
+                        rodada = 1
+                        for i, team1 in enumerate(group):
+                            for team2 in group[i+1:]:
+                                print(f"Rodada {rodada}: {team1} vs {team2}")
+                                if user_team_name in [team1, team2]:
+                                    adv = team2 if team1 == user_team_name else team1
+                                    print(f"--> Seu confronto: {user_team_name} vs {adv}")
+                                rodada += 1
+                else:
+                    # Rodada dupla/tripla
+                    print("\nRodadas:")
+                    rodada = 1
+                    for i, team1 in enumerate(teams):
+                        for team2 in teams[i+1:]:
+                            print(f"Rodada {rodada}: {team1} vs {team2}")
+                            if user_team_name in [team1, team2]:
+                                adv = team2 if team1 == user_team_name else team1
+                                print(f"--> Seu confronto: {user_team_name} vs {adv}")
+                            rodada += 1
+                # Playoffs
+                classificados = random.sample(teams, league["playoff_teams"])
+                print(f"\nClassificados para playoffs: {', '.join(classificados)}")
+                print("\nPlayoffs:")
+                playoff_teams = classificados.copy()
+                random.shuffle(playoff_teams)
+                rodada = 1
+                while len(playoff_teams) > 1:
+                    print(f"Rodada de Playoff {rodada}:")
+                    next_round = []
+                    for i in range(0, len(playoff_teams), 2):
+                        if i+1 < len(playoff_teams):
+                            t1, t2 = playoff_teams[i], playoff_teams[i+1]
+                            print(f"{t1} vs {t2}")
+                            if user_team_name in [t1, t2]:
+                                adv = t2 if t1 == user_team_name else t1
+                                print(f"--> Seu confronto de playoff: {user_team_name} vs {adv}")
+                            winner = random.choice([t1, t2])
+                            next_round.append(winner)
+                    playoff_teams = next_round
+                    rodada += 1
+                print(f"\nCampeão do {league_name}: {playoff_teams[0]}")
+                qualified[league_name] = classificados
+                if region == user_region:
+                    user_league = league_name
+            # Torneio internacional após cada split
+            if split == 1:
+                msi_winner = play_msi(qualified)
+            else:
+                play_worlds(qualified, msi_winner=None)
+        print("\nTemporada concluída!")
+
+    # Exemplo de uso:
+    # jogar_temporada_completa("SeuTime", "Brasil")
+        # ...existing code...
+
+def create_player_from_data(player_data: dict, role: str, region: str) -> Player:
+    """Create a Player object from data, using region as default nationality if not specified."""
+    if isinstance(player_data, dict):
+        return Player(
+            name=player_data["nome"],
+            role=role,
+            skill=player_data["skill"],
+            nationality=player_data.get("nacionalidade", region),
+            world_champion=player_data.get("world_champion", False),
+            best_player=player_data.get("best_player", False),
+            goat=player_data.get("goat", False)
+        )
+    return None
 
 def select_real_team():
     print("\n=== Escolha uma equipe real para treinar ===")
@@ -1703,10 +2048,11 @@ def main_menu():
     while True:
         print(f"\n=== Gerenciamento de Esports - {team.name} ({team.region}) (Saldo: ${team.money}) ===")
         print("1. Ver jogadores")
-        print("2. Contratar jogador")
-        print("3. Demitir jogador")
-        print("4. Treinar jogador")
-        print("5. Alterar cargo de jogador")
+        print("2. Contratar free agent")
+        print("3. Contratar jogador de outro time")
+        print("4. Demitir jogador")
+        print("5. Treinar jogador")
+        print("6. Alterar cargo de jogador")
         print("6. Montar lineup e jogar uma partida")
         print("7. Jogar campeonato")
         print("8. Salvar time")
@@ -1717,14 +2063,28 @@ def main_menu():
         elif choice == "2":
             hire_player(team)
         elif choice == "3":
-            fire_player(team)
+            hire_from_other_teams(team)
         elif choice == "4":
-            train_player(team)
+            fire_player(team)
         elif choice == "5":
-            change_role(team)
+            train_player(team)
         elif choice == "6":
+            change_role(team)
+        elif choice == "7":
             play_match_menu(team)
         elif choice == "7":
+            print("\n=== Times participantes do campeonato ===")
+            # Mostra todos os times participantes antes do campeonato
+            region_list = list(TEAMS_BY_REGION.keys())
+            all_teams = []
+            for region in region_list:
+                teams = TEAMS_BY_REGION[region]["fortes"] + TEAMS_BY_REGION[region]["fracos"]
+                for team_name in teams:
+                    all_teams.append(f"{team_name} ({region})")
+            for t in all_teams:
+                print(t)
+            print(f"\nSeu time: {team.name} ({team.region})")
+            input("Pressione Enter para iniciar o campeonato...")
             play_championship(team)
         elif choice == "8":
             save_team(team)
